@@ -1,30 +1,51 @@
 // index.js
-// where your node app starts
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const app = express();
 
-// init project
-require('dotenv').config();
-var express = require('express');
-var app = express();
+// Enable CORS
+app.use(cors({ optionsSuccessStatus: 200 }));
 
-// enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
-// so that your API is remotely testable by FCC
-var cors = require('cors');
-app.use(cors({ optionsSuccessStatus: 200 })); // some legacy browsers choke on 204
+// Serve static files
+app.use(express.static("public"));
 
-// http://expressjs.com/en/starter/static-files.html
-app.use(express.static('public'));
-
-// http://expressjs.com/en/starter/basic-routing.html
-app.get('/', function (req, res) {
-  res.sendFile(__dirname + '/views/index.html');
+// Root route
+app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/views/index.html");
 });
 
-// your first API endpoint...
-app.get('/api/hello', function (req, res) {
-  res.json({ greeting: 'hello API' });
+// Example test endpoint (not required by the project, but typically included)
+app.get("/api/hello", (req, res) => {
+  res.json({ greeting: "hello API" });
 });
 
-// listen for requests :)
-var listener = app.listen(process.env.PORT || 3000, function () {
-  console.log('Your app is listening on port ' + listener.address().port);
+/**
+ * Request Header Parser Microservice
+ * Route: /api/whoami
+ */
+app.get("/api/whoami", (req, res) => {
+  // 1) Get IP Address
+  // If behind a proxy (e.g., on Replit or Glitch), 'x-forwarded-for' might contain a list of IPs.
+  // The first IP in the list is typically the client's real IP.
+  const ip = req.headers["x-forwarded-for"]
+    ? req.headers["x-forwarded-for"].split(",")[0]
+    : req.ip;
+
+  // 2) Get Preferred Language
+  const language = req.headers["accept-language"];
+
+  // 3) Get User-Agent (software)
+  const software = req.headers["user-agent"];
+
+  res.json({
+    ipaddress: ip,
+    language: language,
+    software: software
+  });
+});
+
+// Start the server
+const listener = app.listen(process.env.PORT || 3000, function () {
+  console.log("Your app is listening on port " + listener.address().port);
 });
